@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Marks Submission</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #f0f3f8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 420px;
+      border: 1px solid #dce3f0;
+      box-shadow: 0 4px 20px rgba(15,30,60,0.10);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #f5c842;
+    }
+    .logo-icon {
+      background: #0f1e3c;
+      color: #f5c842;
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .logo h1 { font-size: 17px; font-weight: 700; color: #0f1e3c; }
+    .logo p  { font-size: 12px; color: #6b7a99; margin-top: 2px; }
+
+    .form-group { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #6b7a99;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 14px;
+      border: 1.5px solid #dce3f0;
+      border-radius: 9px;
+      background: #f8faff;
+      color: #1a1a2e;
+      outline: none;
+      font-family: sans-serif;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: #0f1e3c;
+      background: white;
+    }
+
+    /* GRADE PREVIEW */
+    .grade-preview {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: #f8faff;
+      border: 1.5px solid #dce3f0;
+      border-radius: 9px;
+      transition: border-color 0.2s;
+    }
+    .grade-box {
+      width: 38px; height: 38px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700;
+      flex-shrink: 0;
+      transition: all 0.25s;
+    }
+    .grade-info strong { display: block; font-size: 14px; color: #1a1a2e; }
+    .grade-info span   { font-size: 12px; color: #6b7a99; }
+
+    .g-empty { background: #f0f3f8; color: #94a3b8; }
+    .g-A { background: #dcfce7; color: #15803d; }
+    .g-B { background: #dbeafe; color: #1d4ed8; }
+    .g-C { background: #fef9c3; color: #854d0e; }
+    .g-D { background: #ffedd5; color: #c2410c; }
+    .g-F { background: #fee2e2; color: #b91c1c; }
+
+    .divider { border: none; border-top: 1px solid #dce3f0; margin: 20px 0; }
+
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      background: #0f1e3c;
+      color: white;
+      border: none;
+      border-radius: 9px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: sans-serif;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-submit:hover    { background: #1a2f57; }
+    .btn-submit:active   { transform: scale(0.98); }
+    .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    /* SUCCESS VIEW */
+    .success-view {
+      display: none;
+      text-align: center;
+      padding: 10px 0;
+    }
+    .success-circle {
+      width: 68px; height: 68px;
+      background: #dcfce7;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px;
+      color: #15803d;
+      font-weight: 700;
+      margin: 0 auto 18px;
+    }
+    .success-view h2 { font-size: 19px; color: #0f1e3c; margin-bottom: 8px; }
+    .success-view p  { font-size: 13px; color: #6b7a99; line-height: 1.7; }
+    .success-detail {
+      background: #f8faff;
+      border: 1px solid #dce3f0;
+      border-radius: 10px;
+      padding: 14px;
+      margin: 16px 0;
+      text-align: left;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #1a1a2e;
+    }
+    .success-detail span { color: #6b7a99; }
+
+    .btn-another {
+      padding: 11px 28px;
+      background: #0f1e3c;
+      color: white;
+      border: none;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: sans-serif;
+      margin-top: 6px;
+    }
+    .btn-another:hover { background: #1a2f57; }
+
+    .footer-note {
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- HEADER -->
+  <div class="logo">
+    <div class="logo-icon">S</div>
+    <div>
+      <h1>Student Marks Submission</h1>
+      <p>Results reviewed by admin only</p>
+    </div>
+  </div>
+
+  <!-- FORM VIEW -->
+  <div id="form-view">
+
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="name" placeholder="e.g. Adano Jirma" />
+    </div>
+
+    <div class="form-group">
+      <label>Subject</label>
+      <select id="subject">
+        <option value="">-- Select Subject --</option>
+        <option>Mathematics</option>
+        <option>English</option>
+        <option>Kiswahili</option>
+        <option>Science</option>
+        <option>History</option>
+        <option>Geography</option>
+        <option>Computer Studies</option>
+        <option>Business Studies</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Marks (0 - 100)</label>
+      <input type="number" id="marks" placeholder="e.g. 78" min="0" max="100" oninput="previewGrade()" />
+    </div>
+
+    <div class="form-group">
+      <label>Grade (Auto-calculated)</label>
+      <div class="grade-preview">
+        <div class="grade-box g-empty" id="grade-box">--</div>
+        <div class="grade-info">
+          <strong id="grade-letter">Waiting...</strong>
+          <span id="grade-desc">Enter marks to see grade</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <button class="btn-submit" id="submit-btn" onclick="submitStudent()">
+      Submit Marks
+    </button>
+
+  </div>
+
+  <!-- SUCCESS VIEW (hidden until submit) -->
+  <div class="success-view" id="success-view">
+    <div class="success-circle">&#10003;</div>
+    <h2>Submitted Successfully!</h2>
+    <p>Your marks have been saved to the database.</p>
+
+    <div class="success-detail" id="success-detail">
+      <!-- filled by JS -->
+    </div>
+
+    <p>The admin will review results via the database portal.</p>
+    <br>
+    <button class="btn-another" onclick="resetForm()">Submit Another Student</button>
+  </div>
+
+</div>
+
+<p class="footer-note">Admin portal &rarr; port 8081 (Mongo Express)</p>
+
+<script>
+  const API = "/api";
+
+  // GRADE LOGIC
+  function calcGrade(m) {
+    if (m >= 80) return { letter: "A", desc: "Excellent",  cls: "g-A" };
+    if (m >= 60) return { letter: "B", desc: "Good",       cls: "g-B" };
+    if (m >= 40) return { letter: "C", desc: "Average",    cls: "g-C" };
+    if (m >= 20) return { letter: "D", desc: "Below Avg",  cls: "g-D" };
+    return              { letter: "F", desc: "Fail",       cls: "g-F" };
+  }
+
+  function previewGrade() {
+    const v    = parseInt(document.getElementById("marks").value);
+    const box  = document.getElementById("grade-box");
+    const ltr  = document.getElementById("grade-letter");
+    const desc = document.getElementById("grade-desc");
+
+    if (isNaN(v) || v < 0 || v > 100) {
+      box.className = "grade-box g-empty";
+      box.innerText = "--";
+      ltr.innerText = "Waiting...";
+      desc.innerText = "Enter marks to see grade";
+      return;
+    }
+    const g = calcGrade(v);
+    box.className = "grade-box " + g.cls;
+    box.innerText  = g.letter;
+    ltr.innerText  = "Grade " + g.letter;
+    desc.innerText = g.desc + " (" + v + " / 100)";
+  }
+
+  // SUBMIT
+  function submitStudent() {
+    const name    = document.getElementById("name").value.trim();
+    const subject = document.getElementById("subject").value;
+    const marks   = parseInt(document.getElementById("marks").value);
+    const btn     = document.getElementById("submit-btn");
+
+    if (!name)                                    return alert("Please enter student name!");
+    if (!subject)                                 return alert("Please select a subject!");
+    if (isNaN(marks) || marks < 0 || marks > 100) return alert("Marks must be between 0 and 100!");
+
+    const grade = calcGrade(marks).letter;
+
+    btn.disabled  = true;
+    btn.innerText = "Submitting...";
+
+    fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, subject, marks, grade })
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Server error");
+
+        // Show success, hide form
+        document.getElementById("form-view").style.display    = "none";
+        document.getElementById("success-view").style.display = "block";
+
+        document.getElementById("success-detail").innerHTML =
+          "<span>Name:</span>    <strong>" + name    + "</strong><br>" +
+          "<span>Subject:</span> <strong>" + subject + "</strong><br>" +
+          "<span>Marks:</span>   <strong>" + marks   + " / 100</strong><br>" +
+          "<span>Grade:</span>   <strong>" + grade   + "</strong>";
+      })
+      .catch(() => alert("Submission failed. Please try again."))
+      .finally(() => {
+        btn.disabled  = false;
+        btn.innerText = "Submit Marks";
+      });
+  }
+
+  // RESET
+  function resetForm() {
+    document.getElementById("name").value    = "";
+    document.getElementById("subject").value = "";
+    document.getElementById("marks").value   = "";
+    document.getElementById("form-view").style.display    = "block";
+    document.getElementById("success-view").style.display = "none";
+    previewGrade();
+  }
+</script>
+
+</body>
+</html>
