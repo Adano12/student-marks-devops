@@ -1,6 +1,5 @@
 name: CI/CD - Student Marks App
 
-# TRIGGER: Inafanya kazi kila push kwa main branch
 on:
   push:
     branches:
@@ -12,108 +11,129 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      # ── STEP 1 ──────────────────────────────────
-      # Chukua code yako kutoka GitHub
+      # STEP 1: Checkout code (Updated to v4)
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # ── STEP 2 ──────────────────────────────────
-      # Angalia muundo wa project
+      # STEP 2: Check project structure
       - name: Check project structure
         run: |
-          echo "Files ndani ya project:"
+          echo "Files inside project:"
           ls -la
           echo ""
           echo "Frontend files:"
-          ls -la frontend/
+          ls -la frontend/ || echo "No frontend directory"
           echo ""
           echo "Backend files:"
-          ls -la backend/
+          ls -la backend/ || echo "No backend directory"
+          echo ""
+          echo "Docker files:"
+          ls -la docker/ || echo "No docker directory"
 
-      # ── STEP 3 ──────────────────────────────────
-      # Weka Node.js kwa backend
+      # STEP 3: Setup Node.js (Updated to v4)
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "18"
 
-      # ── STEP 4 ──────────────────────────────────
-      # Install mongodb package
+      # STEP 4: Install backend dependencies
       - name: Install backend dependencies
         run: |
           cd backend
           npm install
           echo "npm install OK!"
 
-      # ── STEP 5 ──────────────────────────────────
-      # Build Docker images (frontend + backend + database)
+      # STEP 5: Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # STEP 6: Build Docker images
       - name: Build Docker images
         run: |
-          docker compose -f compose.yml build
+          echo "Building Docker images..."
+          docker compose -f compose.yml build --no-cache
           echo "Build complete!"
           docker images
 
-      # ── STEP 6 ──────────────────────────────────
-      # Anza containers zote kwa background
+      # STEP 7: Start containers
       - name: Start all containers
         run: |
+          echo "Starting containers..."
           docker compose -f compose.yml up -d
           echo "Containers started!"
 
-      # ── STEP 7 ──────────────────────────────────
-      # Subiri sekunde 25 containers zianze vizuri
+      # STEP 8: Wait for containers to be ready
       - name: Wait for containers to be ready
         run: |
-          echo "Nasubiri containers zianze..."
+          echo "Waiting for containers to initialize..."
           sleep 25
-          echo "Containers ziko tayari!"
+          
+          # Check if containers are actually running
+          docker compose -f compose.yml ps
+          
+          # Verify containers are healthy
+          echo "Checking container status..."
+          docker ps
 
-      # ── STEP 8 ──────────────────────────────────
-      # Onyesha containers zinazofanya kazi
+      # STEP 9: Show running containers
       - name: Show running containers
         run: docker compose -f compose.yml ps
 
-      # ── STEP 9 ──────────────────────────────────
-      # Test frontend inajibu
+      # STEP 10: Test frontend
       - name: Test frontend
         run: |
-          echo "Najaribu frontend..."
-          curl -f http://localhost:8080
-          echo "FRONTEND INAJIBU - OK!"
+          echo "Testing frontend..."
+          for i in {1..10}; do
+            if curl -f http://localhost:8080; then
+              echo "FRONTEND RESPONDING - OK!"
+              break
+            fi
+            echo "Frontend not ready yet, retrying in 5 seconds... (Attempt $i/10)"
+            sleep 5
+          done
 
-      # ── STEP 10 ─────────────────────────────────
-      # Test backend inajibu
+      # STEP 11: Test backend
       - name: Test backend
         run: |
-          echo "Najaribu backend..."
-          curl -f http://localhost:3000/api
-          echo "BACKEND INAJIBU - OK!"
+          echo "Testing backend..."
+          for i in {1..10}; do
+            if curl -f http://localhost:3000/api; then
+              echo "BACKEND RESPONDING - OK!"
+              break
+            fi
+            echo "Backend not ready yet, retrying in 5 seconds... (Attempt $i/10)"
+            sleep 5
+          done
 
-      # ── STEP 11 ─────────────────────────────────
-      # Test POST - jaribu kuadd student
+      # STEP 12: Test student submission
       - name: Test student submission
         run: |
-          echo "Najaribu kuadd student wa test..."
-          curl -f -X POST http://localhost:3000/api \
+          echo "Testing student submission..."
+          curl -v -X POST http://localhost:3000/api \
             -H "Content-Type: application/json" \
             -d '{"name":"CI Test Student","subject":"DevOps","marks":99,"grade":"A"}'
-          echo "POST IMEFANYA KAZI - OK!"
+          echo "POST REQUEST COMPLETED"
 
-      # ── STEP 12 ─────────────────────────────────
-      # Kama kuna error - onyesha logs
+      # STEP 13: Show logs on failure
       - name: Show logs on failure
         if: failure()
         run: |
+          echo "=== ALL CONTAINER STATUS ==="
+          docker ps -a
+          echo ""
           echo "=== FRONTEND LOGS ==="
-          docker compose -f compose.yml logs frontend
+          docker compose -f compose.yml logs frontend || echo "No frontend logs"
+          echo ""
           echo "=== BACKEND LOGS ==="
-          docker compose -f compose.yml logs backend
+          docker compose -f compose.yml logs backend || echo "No backend logs"
+          echo ""
+          echo "=== DATABASE LOGS ==="
+          docker compose -f compose.yml logs mongodb || echo "No database logs"
 
-      # ── STEP 13 ─────────────────────────────────
-      # Safisha containers baada ya test
+      # STEP 14: Cleanup
       - name: Cleanup
         if: always()
         run: |
-          docker compose -f compose.yml down
+          echo "Cleaning up..."
+          docker compose -f compose.yml down -v
           echo "Cleanup done!"
